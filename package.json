@@ -1,18 +1,12 @@
 {
-  "name": "youtube-auto-bot",
+  "name": "viral-bot",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@google-cloud/text-to-speech": "^6.4.0",
-    "dotenv": "^17.2.3",
     "express": "^4.18.2",
-    "fluent-ffmpeg": "^2.1.3",
-    "googleapis": "^105.0.0"
-  },
-  "engines": {
-    "node": "20.x"
+    "@google/generative-ai": "^0.1.0"
   }
 }
