@@ -11,10 +11,10 @@ app.get('/', (req, res) => {
 
 app.get('/make-viral-video', async (req, res) => {
   try {
-    // استخدمنا "gemini-1.5-flash-latest" لضمان التوافق العالمي
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    // استخدمنا نموذج 8b وهو أسرع وأكثر توافقاً مع v1beta
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-8b" });
     
-    const prompt = "اكتب قصة رعب قصيرة جداً ومشوقة بالعامية العربية، تنتهي بنهاية صادمة تجعل المتابعين يكتبون تعليقات كثيرة.";
+    const prompt = "اكتب قصة رعب غامضة وقصيرة جداً بالعامية العربية تجذب الملايين، مع نهاية صادمة جداً تجعلهم يعلقون بكثرة.";
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
