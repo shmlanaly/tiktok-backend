@@ -6,8 +6,8 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "*",
-    "googleapis": "*"
+    "express": "^4.18.2",
+    "googleapis": "^105.0.0"
   },
   "engines": {
     "node": "18.x"
