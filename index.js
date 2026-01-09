@@ -4,41 +4,72 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.get('/make-viral-video', async (req, res) => {
-  const API_KEY = process.env.GROQ_API_KEY;
-  const url = "https://api.groq.com/openai/v1/chat/completions";
+  const GROQ_KEY = process.env.GROQ_API_KEY;
+  const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY;
 
   try {
-    const response = await axios.post(url, {
+    // 1. توليد القصة عبر الموديل الشغال Llama 3.3
+    const textResponse = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: "اكتب قصة رعب يمنية قصيرة جداً ومشوقة بلهجة صنعانية." }]
+      messages: [{ role: "user", content: "اكتب قصة رعب يمنية قصيرة جداً ومشوقة بلهجة صنعانية حادة وغامضة." }]
     }, {
-      headers: { "Authorization": `Bearer ${API_KEY}`, "Content-Type": "application/json" }
+      headers: { "Authorization": `Bearer ${GROQ_KEY}` }
     });
 
-    const script = response.data.choices[0].message.content;
-    
-    // إرسال الصفحة مع مشغل صوتي (Text-to-Speech)
+    const script = textResponse.data.choices[0].message.content;
+
+    // 2. واجهة احترافية مع صوت بشري صافٍ (ElevenLabs)
     res.send(`
       <div style="font-family:sans-serif; text-align:center; padding:20px; background:#000; color:#fff; min-height:100vh;">
-        <h1 style="color:#00f2ea;">🎙️ قصة مرعبة من Llama 3.3</h1>
-        <div id="storyText" style="background:#111; padding:20px; border-radius:15px; direction:rtl; font-size:22px; line-height:1.6;">
+        <h1 style="color:#00f2ea;">🎙️ استديو الصوت البشري الاحترافي</h1>
+        <div id="storyText" style="background:#111; padding:20px; border-radius:15px; direction:rtl; font-size:22px; line-height:1.8; border:1px solid #333; margin-bottom:20px;">
           ${script.replace(/\n/g, '<br>')}
         </div>
         
         <div style="margin-top:20px;">
-          <button onclick="speak()" style="padding:15px 30px; background:#00f2ea; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-right:10px;">🔊 استماع للقصة</button>
-          <button onclick="location.reload()" style="padding:15px 30px; background:#ff0050; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">✨ قصة جديدة</button>
+          <audio id="audioPlayer" controls style="width:100%; border-radius:10px;"></audio>
+          <br><br>
+          <button id="voiceBtn" onclick="generateVoice()" style="padding:15px 30px; background:#00f2ea; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">🎙️ تحويل لنبرة بشرية حادة</button>
         </div>
 
         <script>
-          function speak() {
+          async function generateVoice() {
+            const btn = document.getElementById('voiceBtn');
+            btn.innerText = "جاري معالجة الصوت...";
+            btn.disabled = true;
+
             const text = document.getElementById('storyText').innerText;
-            const msg = new SpeechSynthesisUtterance();
-            msg.text = text;
-            msg.lang = 'ar-SA'; // لغة عربية
-            msg.pitch = 0.5;    // صوت عميق ومرعب
-            msg.rate = 0.9;     // سرعة هادئة للتشويق
-            window.speechSynthesis.speak(msg);
+            
+            // نستخدم هنا موديل Antoni من ElevenLabs (صوت بشري حاد وصافٍ)
+            const voiceId = "ErXwRqc4n4S7vI6V2A5T"; // نبرة حادة واحترافية
+            const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceId;
+            
+            try {
+              const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'xi-api-key': '${ELEVEN_KEY}'
+                },
+                body: JSON.stringify({
+                  text: text,
+                  model_id: "eleven_multilingual_v2",
+                  voice_settings: { stability: 0.5, similarity_boost: 0.8, style: 0.5 }
+                })
+              });
+
+              const blob = await response.blob();
+              const audioUrl = URL.createObjectURL(blob);
+              const player = document.getElementById('audioPlayer');
+              player.src = audioUrl;
+              player.play();
+              btn.innerText = "🔊 تشغيل مرة أخرى";
+              btn.disabled = false;
+            } catch (err) {
+              alert("تأكد من وضع API Key الخاص بـ ElevenLabs في Railway");
+              btn.innerText = "فشل التحويل";
+              btn.disabled = false;
+            }
           }
         </script>
       </div>
@@ -48,4 +79,4 @@ app.get('/make-viral-video', async (req, res) => {
   }
 });
 
-app.listen(port, '0.0.0.0', () => console.log('Voice Server Running!'));
+app.listen(port, '0.0.0.0');
