@@ -1,6 +1,6 @@
 {
-  "name": "viral-bot-free-voice",
-  "version": "1.5.0",
+  "name": "viral-bot-stable-voice",
+  "version": "1.6.0",
   "main": "index.js",
   "scripts": { "start": "node index.js" },
   "dependencies": {
