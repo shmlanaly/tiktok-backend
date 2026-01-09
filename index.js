@@ -4,11 +4,11 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 const API_KEY = process.env.GEMINI_API_KEY;
-// الرابط اليدوي المباشر لتخطي خطأ 404
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+// تغيير النموذج إلى gemini-1.5-flash-8b لضمان التوافق
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${API_KEY}`;
 
 app.get('/', (req, res) => {
-  res.send('<h1>المصنع يعمل بقوة!</h1><a href="/make-viral-video">توليد قصة الآن</a>');
+  res.send('<h1>البوت متصل بالسحابة!</h1><a href="/make-viral-video">توليد قصة الآن</a>');
 });
 
 app.get('/make-viral-video', async (req, res) => {
@@ -31,8 +31,8 @@ app.get('/make-viral-video', async (req, res) => {
       </div>
     `);
   } catch (err) {
-    res.status(500).send("خطأ في الاتصال المباشر: " + (err.response ? JSON.stringify(err.response.data) : err.message));
+    res.status(500).send("خطأ: " + (err.response ? JSON.stringify(err.response.data) : err.message));
   }
 });
 
-app.listen(port, '0.0.0.0', () => console.log('Direct Connection Server Running!'));
+app.listen(port, '0.0.0.0', () => console.log('Final Stable Server Running!'));
