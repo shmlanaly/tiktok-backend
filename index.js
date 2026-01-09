@@ -4,8 +4,8 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 const API_KEY = process.env.GEMINI_API_KEY;
-// تغيير النموذج إلى gemini-1.5-flash-8b لضمان التوافق
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${API_KEY}`;
+// استخدام gemini-pro لأنه النموذج الأكثر استقراراً ومجاني تماماً
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
 app.get('/', (req, res) => {
   res.send('<h1>البوت متصل بالسحابة!</h1><a href="/make-viral-video">توليد قصة الآن</a>');
@@ -35,4 +35,4 @@ app.get('/make-viral-video', async (req, res) => {
   }
 });
 
-app.listen(port, '0.0.0.0', () => console.log('Final Stable Server Running!'));
+app.listen(port, '0.0.0.0', () => console.log('Stable Gemini Pro Server Running!'));
