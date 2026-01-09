@@ -1,25 +1,25 @@
 const express = require('express');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const axios = require('axios');
 const app = express();
 const port = process.env.PORT || 8080;
 
-// إعداد الذكاء الاصطناعي مع تحديد الإصدار التجريبي v1beta يدوياً
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const API_KEY = process.env.GEMINI_API_KEY;
+// الرابط اليدوي المباشر لتخطي خطأ 404
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 app.get('/', (req, res) => {
-  res.send('<h1>المصنع يعمل بنجاح!</h1><a href="/make-viral-video">توليد قصة الآن</a>');
+  res.send('<h1>المصنع يعمل بقوة!</h1><a href="/make-viral-video">توليد قصة الآن</a>');
 });
 
 app.get('/make-viral-video', async (req, res) => {
   try {
-    // تحديد v1beta هنا هو الحل لتخطي خطأ 404 في منطقتك
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: 'v1beta' });
-    
-    const prompt = "اكتب قصة رعب قصيرة جداً ومشوقة بالعامية العربية، تنتهي بنهاية صادمة تجذب المتابعين للملايين.";
-    
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const script = response.text();
+    const response = await axios.post(GEMINI_URL, {
+      contents: [{
+        parts: [{ text: "اكتب قصة رعب قصيرة جداً ومشوقة بالعامية العربية، تنتهي بنهاية صادمة تجذب المتابعين." }]
+      }]
+    });
+
+    const script = response.data.candidates[0].content.parts[0].text;
 
     res.send(`
       <div style="font-family:sans-serif; text-align:center; padding:20px; background:#111; color:white; min-height:100vh;">
@@ -31,8 +31,8 @@ app.get('/make-viral-video', async (req, res) => {
       </div>
     `);
   } catch (err) {
-    res.status(500).send("خطأ في التوليد: " + err.message);
+    res.status(500).send("خطأ في الاتصال المباشر: " + (err.response ? JSON.stringify(err.response.data) : err.message));
   }
 });
 
-app.listen(port, '0.0.0.0', () => console.log('Server is running!'));
+app.listen(port, '0.0.0.0', () => console.log('Direct Connection Server Running!'));
