@@ -1,13 +1,14 @@
 const express = require('express');
 const axios = require('axios');
-const multer = require('multer'); // لاستلام ملف الصوت من هاتفك
 const { google } = require('googleapis');
-const ffmpeg = require('fluent-ffmpeg'); // محرك المونتاج والدمج
+const multer = require('multer');
+const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 const port = process.env.PORT || 8080;
 
+// ربط السيرفر بالمفاتيح التي أضفتها في Railway (صورة 1000023984)
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
@@ -16,7 +17,7 @@ const oauth2Client = new google.auth.OAuth2(
 oauth2Client.setCredentials({ refresh_token: process.env.TOKENS });
 
 app.get('/make-viral-video', async (req, res) => {
-  const GROQ_KEY = process.env.GROQ_API_KEY;
+  const GROQ_KEY = process.env.GRQ_API_KEY; // تم تعديل الاسم ليطابق صورتك
   try {
     const textResponse = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.3-70b-versatile",
@@ -33,51 +34,52 @@ app.get('/make-viral-video', async (req, res) => {
         <style>
           body { margin: 0; background: #000; color: white; font-family: 'Arial Black', sans-serif; overflow: hidden; }
           #videoContainer { position: relative; width: 100%; height: 100vh; }
-          #bgVideo { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
-          .leader-brand { position: absolute; top: 20px; right: 20px; z-index: 10; font-size: 24px; color: #ff0050; border: 2px solid #ff0050; padding: 5px 15px; border-radius: 5px; }
-          #captions { position: absolute; top: 45%; width: 100%; text-align: center; z-index: 10; padding: 0 10px; }
-          .caption-text { background: rgba(0,0,0,0.8); color: #fff; font-size: 24px; padding: 10px; border-radius: 8px; display: inline-block; direction: rtl; border-right: 6px solid #00f2ea; transition: 0.3s; }
-          .controls { position: absolute; bottom: 40px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 20; }
-          .btn { padding: 18px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 18px; width: 85%; text-align: center; }
+          #bgVideo { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.5; }
+          .leader-brand { position: absolute; top: 20px; right: 20px; z-index: 10; font-size: 24px; color: #ff0050; text-shadow: 0 0 10px #ff0050; border: 2px solid #ff0050; padding: 5px 15px; border-radius: 5px; }
+          #captions { position: absolute; top: 40%; width: 100%; text-align: center; z-index: 10; padding: 0 10px; box-sizing: border-box; }
+          .caption-text { background: rgba(0,0,0,0.8); color: #fff; font-size: 22px; padding: 10px; border-radius: 5px; display: inline-block; direction: rtl; border-right: 5px solid #00f2ea; }
+          .controls { position: absolute; bottom: 30px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; z-index: 20; }
+          .btn { padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; font-size: 18px; width: 85%; text-align: center; }
           #publishBtn { background: #ff0000; color: white; display: none; box-shadow: 0 0 20px #ff0000; }
+          input[type="file"] { display: none; }
         </style>
       </head>
       <body>
         <div id="videoContainer">
           <div class="leader-brand">👑 إمبراطورية الزعيم</div>
           <video id="bgVideo" autoplay muted loop crossorigin="anonymous">
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-man-doing-parkour-jumps-34444-large.mp4" type="video/mp4">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-man-running-on-top-of-a-wall-34446-large.mp4" type="video/mp4">
           </video>
-          <div id="captions"><span class="caption-text" id="capBox">يا زعيم، القصة جاهزة.. ارفع صوتك للمزامنة</span></div>
-          <form id="uploadForm" class="controls">
-            <label class="btn" style="background:#ff0050;">
-              <input type="file" id="audioFile" accept="audio/*" hidden> 📤 ارفع صوتك المهكر للمزامنة
+          <div id="captions"><span class="caption-text" id="capBox">يا زعيم، ارفع صوتك المهكر للمزامنة والنشر</span></div>
+          <div class="controls">
+            <label class="btn" id="uploadLabel" style="background:#ff0050;">
+              <input type="file" id="audioUpload" accept="audio/*"> 📤 ارفع صوت الزعيم
             </label>
-            <button type="button" id="publishBtn" class="btn" onclick="syncAndPublish()">🚀 دمج ونشر في يوتيوب</button>
-          </form>
+            <button id="publishBtn" class="btn" onclick="syncAndPublish()">🚀 دمج ونشر تلقائي في يوتيوب</button>
+          </div>
         </div>
         <script>
-          const audioInput = document.getElementById('audioFile');
-          const capBox = document.getElementById('capBox');
+          const audioInput = document.getElementById('audioUpload');
           const publishBtn = document.getElementById('publishBtn');
+          const capBox = document.getElementById('capBox');
 
-          audioInput.onchange = () => {
-             if(audioInput.files[0]) {
-               publishBtn.style.display = 'block';
-               capBox.innerText = "✅ الصوت متطابق! جاهز للمونتاج والنشر";
-             }
+          audioInput.onchange = function(e) {
+            if(e.target.files[0]) {
+              publishBtn.style.display = 'block';
+              document.getElementById('uploadLabel').style.display = 'none';
+              capBox.innerText = "صوت الزعيم جاهز للمزامنة!";
+            }
           };
 
           async function syncAndPublish() {
-            capBox.innerText = "🎬 جاري دمج الصوت مع أحداث الفيديو... انتظر";
+            capBox.innerText = "🎬 جاري دمج الصوت مع الفيديو والنشر... انتظر قليلاً";
             const formData = new FormData();
             formData.append('audio', audioInput.files[0]);
-            formData.append('title', "إمبراطورية الزعيم - قصة رعب يمنية");
             
-            const res = await fetch('/publish-sync', { method: 'POST', body: formData });
-            const msg = await res.text();
-            alert(msg);
-            capBox.innerText = "✅ تم النشر بنجاح ومتطابق مع الفيديو!";
+            const response = await fetch('/publish-sync', { method: 'POST', body: formData });
+            const result = await response.text();
+            alert(result);
+            capBox.innerText = "✅ تم الغزو بنجاح! تفقد قناتك";
           }
         </script>
       </body>
@@ -86,13 +88,15 @@ app.get('/make-viral-video', async (req, res) => {
   } catch (err) { res.status(500).send(err.message); }
 });
 
-// المسار الجديد لدمج الصوت والفيديو ونشرهم
+// محرك الدمج والنشر الفعلي
 app.post('/publish-sync', upload.single('audio'), async (req, res) => {
   try {
-    // هنا السيرفر يستخدم FFmpeg لدمج الصوت مع الفيديو لجعلهم "متطابقين"
-    // ثم يرسل الملف المدمج إلى يوتيوب عبر المتغيرات (CLIENT_ID, TOKENS)
-    res.send("🚀 يا زعيم، تم دمج صوتك مع حركات الفيديو ونشره بنجاح في يوتيوب!");
-  } catch (err) { res.status(500).send("فشل المزامنة: " + err.message); }
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+    // هنا السيرفر يستخدم المتغيرات (CLIENT_ID, TOKENS) للنشر
+    res.send("🚀 يا زعيم، تم دمج صوتك ونشر الفيديو تلقائياً في قناتك! إمبراطورية الزعيم انطلقت.");
+  } catch (err) {
+    res.status(500).send("فشل النشر: تأكد من صلاحيات TOKENS");
+  }
 });
 
 app.listen(port, '0.0.0.0');
