@@ -3,19 +3,19 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 const port = process.env.PORT || 8080;
 
-// الحل هنا: تعريف المحرك لاستخدام v1beta
+// إعداد الذكاء الاصطناعي مع تحديد الإصدار التجريبي v1beta يدوياً
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.get('/', (req, res) => {
-  res.send('<h1>المصنع نشط!</h1><a href="/make-viral-video">ابدأ توليد الملايين</a>');
+  res.send('<h1>المصنع يعمل بنجاح!</h1><a href="/make-viral-video">توليد قصة الآن</a>');
 });
 
 app.get('/make-viral-video', async (req, res) => {
   try {
-    // استخدمنا نموذج gemini-pro لأنه الأكثر استقراراً في v1 حالياً لتجنب الـ 404
+    // تحديد v1beta هنا هو الحل لتخطي خطأ 404 في منطقتك
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: 'v1beta' });
     
-    const prompt = "اكتب قصة رعب غامضة وقصيرة جداً بالعامية العربية تجذب الملايين، مع نهاية صادمة.";
+    const prompt = "اكتب قصة رعب قصيرة جداً ومشوقة بالعامية العربية، تنتهي بنهاية صادمة تجذب المتابعين للملايين.";
     
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -23,7 +23,7 @@ app.get('/make-viral-video', async (req, res) => {
 
     res.send(`
       <div style="font-family:sans-serif; text-align:center; padding:20px; background:#111; color:white; min-height:100vh;">
-        <h1 style="color:#00f2ea;">👻 القصة الفيروسية</h1>
+        <h1 style="color:#00f2ea;">👻 القصة الفيروسية جاهزة</h1>
         <div style="background:#222; padding:20px; border-radius:15px; border-left: 5px solid #ff0050; margin:20px 0; text-align:right; direction:rtl; font-size:22px;">
           ${script.replace(/\n/g, '<br>')}
         </div>
@@ -35,4 +35,4 @@ app.get('/make-viral-video', async (req, res) => {
   }
 });
 
-app.listen(port, '0.0.0.0', () => console.log('Server is alive!'));
+app.listen(port, '0.0.0.0', () => console.log('Server is running!'));
