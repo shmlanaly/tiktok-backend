@@ -1,32 +1,30 @@
-const { google } = require('googleapis');
 const express = require('express');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
+const port = process.env.PORT || 8080;
 
-// الآن نطلب من السيرفر جلب المفاتيح من خزنة المتغيرات
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-if (!CLIENT_ID || !CLIENT_SECRET) {
-    console.error('❌ خطأ: لم يتم العثور على المفاتيح في المتغيرات!');
-}
+app.get('/make-viral-video', async (req, res) => {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    
+    // توجيه الذكاء الاصطناعي لكتابة محتوى مخصص للجذب (رعب أو ضحك)
+    const prompt = "اكتب قصة رعب قصيرة جداً ومشوقة باللغة العربية العامية، مدتها 45 ثانية عند القراءة، تنتهي بنهاية صادمة تجعل المشاهد يعلق على الفيديو. واقترح عنواناً مديراً للجدل.";
+    
+    const result = await model.generateContent(prompt);
+    const script = result.response.text();
 
-const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
-
-app.get('/auth', (req, res) => {
-    const url = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: ['https://www.googleapis.com/auth/youtube.upload']
-    });
-    res.redirect(url);
+    res.send(`
+      <h1>🎬 سيناريو الفيديو الفيروسي جاهز:</h1>
+      <div style="background:#f0f0f0; padding:20px; border-radius:10px;">
+        ${script.replace(/\n/g, '<br>')}
+      </div>
+      <p>✅ البوت الآن سيقوم بتحويل هذا النص إلى صوت (Voiceover) ودمجه مع فيديو خلفية ممتع.</p>
+    `);
+  } catch (error) {
+    res.status(500).send("خطأ: " + error.message);
+  }
 });
 
-app.get('/callback', async (req, res) => {
-    const { code } = req.query;
-    const { tokens } = await oauth2Client.getToken(code);
-    console.log('✅ Success! Tokens received.');
-    res.send('<h1>تم الربط بنجاح!</h1><p>انسخ هذا الكود وضعه في تيرمكس:</p><textarea style="width:100%;height:100px">' + JSON.stringify(tokens) + '</textarea>');
-});
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log('🚀 Server Ready on port ' + PORT));
+app.listen(port, () => console.log('Server Ready'));
