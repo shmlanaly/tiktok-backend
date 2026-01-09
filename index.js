@@ -1,6 +1,5 @@
 const express = require('express');
 const axios = require('axios');
-const { MsEdgeTTS } = require('edge-tts');
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -9,65 +8,72 @@ app.get('/make-viral-video', async (req, res) => {
   try {
     const textResponse = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: "اكتب قصة رعب يمنية طويلة (150 كلمة) بلهجة صنعانية مشوقة." }]
+      messages: [{ role: "user", content: "اكتب قصة رعب يمنية بلهجة صنعانية مشوقة وطويلة (150 كلمة)." }]
     }, { headers: { "Authorization": `Bearer ${GROQ_KEY}` } });
 
     const script = textResponse.data.choices[0].message.content;
 
     res.send(`
       <!DOCTYPE html>
-      <html lang="ar">
+      <html>
       <head>
-        <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { margin: 0; background: #000; color: white; font-family: sans-serif; overflow: hidden; }
+          body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: white; }
           #bgVideo { position: fixed; right: 0; bottom: 0; min-width: 100%; min-height: 100%; z-index: -1; opacity: 0.5; }
-          .container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; }
-          .story-box { background: rgba(0,0,0,0.8); padding: 20px; border-radius: 15px; direction: rtl; font-size: 18px; border: 1px solid #00f2ea; max-height: 40%; overflow-y: auto; margin-bottom: 20px; }
-          button { padding: 15px 30px; background: #00f2ea; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 18px; box-shadow: 0 0 15px #00f2ea; }
+          .overlay { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 20px; text-align: center; }
+          .story-box { background: rgba(0,0,0,0.8); padding: 20px; border-radius: 15px; direction: rtl; line-height: 1.6; border: 1px solid #00f2ea; max-height: 40%; overflow-y: auto; margin-bottom: 15px; }
+          .btn-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+          input[type="file"] { display: none; }
+          .custom-file-upload { padding: 15px; background: #ff0050; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px #ff0050; }
+          #playBtn { padding: 15px; background: #00f2ea; color: black; border-radius: 50px; font-weight: bold; border: none; cursor: pointer; display: none; }
         </style>
       </head>
       <body>
         <video autoplay muted loop id="bgVideo">
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-man-running-on-top-of-a-wall-34446-large.mp4" type="video/mp4">
+          <source src="https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-man-doing-parkour-jumps-34444-large.mp4" type="video/mp4">
         </video>
-        <div class="container">
+
+        <div class="overlay">
+          <h2 style="color: #00f2ea;">🎮 استديو ابو عدي تك</h2>
           <div id="storyText" class="story-box">${script.replace(/\n/g, '<br>')}</div>
-          <button id="vBtn" onclick="playVoice()">🎙️ توليد صوت جيميناي (مجاني)</button>
-          <p id="status" style="margin-top: 10px; color: #00f2ea;"></p>
+          
+          <div class="btn-group">
+            <label class="custom-file-upload">
+              <input type="file" id="audioUpload" accept="audio/*">
+              📤 ارفع صوتك المهكر (MP3)
+            </label>
+            <button id="playBtn" onclick="startVideo()">🎬 تشغيل الفيديو بالصوت المرفوع</button>
+          </div>
+          <p id="status" style="margin-top: 10px; font-size: 14px; color: #aaa;"></p>
         </div>
+
         <script>
-          async function playVoice() {
-            const btn = document.getElementById('vBtn');
-            const status = document.getElementById('status');
-            btn.disabled = true;
-            status.innerText = "جاري تحويل النص لصوت بشري...";
-            try {
-              const text = document.getElementById('storyText').innerText;
-              const response = await fetch('/get-audio?text=' + encodeURIComponent(text));
-              const blob = await response.blob();
-              const audio = new Audio(URL.createObjectURL(blob));
-              audio.play();
-              status.innerText = "✅ مستمر في السرد اللانهائي...";
-            } catch (e) { status.innerText = "❌ خطأ في السيرفر"; }
-            btn.disabled = false;
+          const audioInput = document.getElementById('audioUpload');
+          const playBtn = document.getElementById('playBtn');
+          const status = document.getElementById('status');
+          let uploadedAudio = null;
+
+          audioInput.onchange = function(e) {
+            const file = e.target.files[0];
+            if(file) {
+              uploadedAudio = new Audio(URL.createObjectURL(file));
+              playBtn.style.display = 'block';
+              status.innerText = "✅ تم تحميل الصوت بنجاح!";
+            }
+          };
+
+          function startVideo() {
+            if(uploadedAudio) {
+              uploadedAudio.play();
+              status.innerText = "🔊 جاري العرض بصوتك المخصص...";
+            }
           }
         </script>
       </body>
       </html>
     `);
   } catch (err) { res.status(500).send(err.message); }
-});
-
-app.get('/get-audio', async (req, res) => {
-  const tts = new MsEdgeTTS();
-  // صوت "حامد" السعودي (Ar-SA-Hamid) هو الأقرب لنبرة جيميناي الرجالية الحادة
-  await tts.setMetadata("ar-SA-HamidNeural", "audio-24khz-48kbitrate-mono-mp3");
-  try {
-    const readable = tts.toStream(req.query.text);
-    readable.pipe(res);
-  } catch (e) { res.status(500).send("TTS Error"); }
 });
 
 app.listen(port, '0.0.0.0');
