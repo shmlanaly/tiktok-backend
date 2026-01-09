@@ -1,6 +1,5 @@
 const express = require('express');
 const axios = require('axios');
-const gTTS = require('gtts');
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -9,74 +8,73 @@ app.get('/make-viral-video', async (req, res) => {
   try {
     const textResponse = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: "اكتب قصة رعب يمنية بلهجة صنعانية مشوقة وطويلة (120 كلمة)." }]
+      messages: [{ role: "user", content: "اكتب قصة رعب يمنية بلهجة صنعانية مشوقة وطويلة (150 كلمة)." }]
     }, { headers: { "Authorization": `Bearer ${GROQ_KEY}` } });
 
     const script = textResponse.data.choices[0].message.content;
 
     res.send(`
-      <div style="font-family:sans-serif; text-align:center; padding:20px; background:#000; color:#fff; min-height:100vh;">
-        <h1 style="color:#00f2ea;">🚀 استديو الرعب (نسخة Chrome الاحترافية)</h1>
-        <div id="storyText" style="background:#111; padding:20px; border-radius:15px; direction:rtl; font-size:18px; line-height:1.8; text-align:right; max-height:350px; overflow-y:auto; margin-bottom:20px; border:1px solid #333;">
-          ${script.replace(/\n/g, '<br>')}
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+          /* فيديو الخلفية (GTA/Parkour) */
+          #bgVideo { position: fixed; right: 0; bottom: 0; min-width: 100%; min-height: 100%; z-index: -1; opacity: 0.6; }
+          .overlay { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: white; text-align: center; padding: 20px; }
+          .story-box { background: rgba(0,0,0,0.7); padding: 20px; border-radius: 15px; direction: rtl; line-height: 1.6; font-size: 18px; border: 1px solid #00f2ea; max-width: 90%; max-height: 50%; overflow-y: auto; }
+          #vBtn { margin-top: 20px; padding: 15px 30px; background: #ff0050; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 20px; box-shadow: 0 0 15px #ff0050; }
+        </style>
+      </head>
+      <body>
+        <video autoplay muted loop id="bgVideo">
+          <source src="https://assets.mixkit.co/videos/preview/mixkit-top-view-of-a-man-doing-parkour-jumps-34444-large.mp4" type="video/mp4">
+        </video>
+
+        <div class="overlay">
+          <h2 style="color: #00f2ea;">🎙️ فيديو تيك توك جاهز</h2>
+          <div id="storyText" class="story-box">${script.replace(/\n/g, '<br>')}</div>
+          <button id="vBtn" onclick="startProduction()">🎬 تشغيل الصوت والفيديو</button>
+          <p id="status" style="margin-top: 10px; font-size: 14px; color: #aaa;"></p>
         </div>
-        
-        <button id="vBtn" onclick="playChromeAudio()" style="padding:15px 30px; background:#00f2ea; border:none; border-radius:10px; font-weight:bold; cursor:pointer; width:100%; color:#000; font-size:18px;">🎙️ تشغيل القصة (تتابع ذكي)</button>
-        <p id="status" style="color:#888; margin-top:15px;"></p>
 
         <script>
-          async function playChromeAudio() {
+          function startProduction() {
             const btn = document.getElementById('vBtn');
             const status = document.getElementById('status');
-            const fullText = document.getElementById('storyText').innerText;
-            
-            // تقسيم النص بجمل واضحة
-            const chunks = fullText.split(/[.،!؟\n]+/).filter(t => t.trim().length > 2);
-            
-            btn.disabled = true;
-            status.innerText = "جاري الاتصال بالسيرفر...";
+            const text = document.getElementById('storyText').innerText;
 
-            for (let i = 0; i < chunks.length; i++) {
-              status.innerText = "🔊 جاري قراءة الجزء " + (i+1) + " من " + chunks.length;
-              await new Promise((resolve) => {
-                const audio = new Audio('/proxy-audio?text=' + encodeURIComponent(chunks[i]));
-                // إعدادات خاصة للكروم لضمان التشغيل
-                audio.preload = 'auto';
-                audio.onended = resolve;
-                audio.onerror = (e) => {
-                   console.error("خطأ في الجزء:", chunks[i]);
-                   resolve();
-                };
-                audio.play().catch(err => {
-                   status.innerText = "⚠️ اضغط مرة أخرى لتفعيل الصوت في المتصفح";
-                   resolve();
-                });
-              });
-            }
+            // 1. تفعيل محرك الصوت الداخلي (Web Speech)
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(text);
             
-            btn.disabled = false;
-            status.innerText = "✅ انتهت القصة كاملة";
+            // ضبط النبرة لتكون بشرية وحادة
+            utterance.lang = 'ar-SA'; 
+            utterance.pitch = 0.8; // نبرة عميقة للرعب
+            utterance.rate = 0.9;  // سرعة هادئة ومشوقة
+
+            utterance.onstart = () => {
+              btn.innerText = "🔊 جاري السرد الآن...";
+              btn.style.background = "#00f2ea";
+              status.innerText = "هاتفك يقوم بنطق القصة الآن بصوت صافٍ";
+            };
+
+            utterance.onend = () => {
+              btn.innerText = "🎬 إعادة التشغيل";
+              btn.style.background = "#ff0050";
+              status.innerText = "✅ اكتمل الفيديو";
+            };
+
+            // تشغيل الصوت (تجاوز حظر كروم)
+            synth.cancel(); // إلغاء أي عمليات سابقة
+            synth.speak(utterance);
           }
         </script>
-      </div>
+      </body>
+      </html>
     `);
   } catch (err) { res.status(500).send(err.message); }
-});
-
-// مسار الوكيل المطور مع ترويسات Chrome
-app.get('/proxy-audio', (req, res) => {
-  const text = req.query.text;
-  try {
-    const gtts = new gTTS(text, 'ar');
-    // إخبار الكروم رسمياً أن هذا ملف صوتي
-    res.set({
-      'Content-Type': 'audio/mpeg',
-      'Transfer-Encoding': 'chunked'
-    });
-    gtts.stream().pipe(res);
-  } catch (e) {
-    res.status(500).end();
-  }
 });
 
 app.listen(port, '0.0.0.0');
