@@ -1,11 +1,11 @@
 {
-  "name": "viral-bot-final-stable",
-  "version": "2.0.0",
+  "name": "viral-bot-gtts",
+  "version": "2.1.0",
   "main": "index.js",
   "scripts": { "start": "node index.js" },
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.0",
-    "google-tts-api": "^2.0.2"
+    "gtts": "^0.2.1"
   }
 }
