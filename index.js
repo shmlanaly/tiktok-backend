@@ -28,5 +28,5 @@ app.get('/callback', async (req, res) => {
     res.send('<h1>تم الربط بنجاح!</h1><p>انسخ هذا الكود وضعه في تيرمكس:</p><textarea style="width:100%;height:100px">' + JSON.stringify(tokens) + '</textarea>');
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log('🚀 Server Ready on port ' + PORT));
