@@ -2,13 +2,13 @@ const express = require('express');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 
-// استخدام المنفذ الصحيح لـ Railway
-const port = process.env.PORT || 3000;
+// Railway يتطلب استخدام المنفذ من متغيرات البيئة
+const port = process.env.PORT || 8080;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.get('/', (req, res) => {
-  res.send('السيرفر يعمل بنجاح! جرب /make-viral-video');
+  res.status(200).send('<h1>البوت متصل بالسحابة بنجاح!</h1><a href="/make-viral-video">اضغط هنا لتوليد فيديو</a>');
 });
 
 app.get('/make-viral-video', async (req, res) => {
@@ -19,11 +19,7 @@ app.get('/make-viral-video', async (req, res) => {
     const result = await model.generateContent(prompt);
     const script = result.response.text();
 
-    const backgroundVideos = [
-      "https://assets.mixkit.co/videos/preview/mixkit-playing-with-colorful-slime-40436-large.mp4",
-      "https://assets.mixkit.co/videos/preview/mixkit-cutting-sand-with-a-knife-40441-large.mp4"
-    ];
-    const selectedVideo = backgroundVideos[Math.floor(Math.random() * backgroundVideos.length)];
+    const video = "https://assets.mixkit.co/videos/preview/mixkit-playing-with-colorful-slime-40436-large.mp4";
 
     res.send(`
       <div style="font-family:sans-serif; text-align:center; padding:20px; background:#1a1a1a; color:white; min-height:100vh;">
@@ -32,17 +28,16 @@ app.get('/make-viral-video', async (req, res) => {
           ${script.replace(/\n/g, '<br>')}
         </div>
         <video width="280" controls autoplay loop style="border-radius:15px;">
-          <source src="${selectedVideo}" type="video/mp4">
+          <source src="${video}" type="video/mp4">
         </video>
-        <p>البوت يعمل الآن على دمج القصة مع الفيديو...</p>
       </div>
     `);
   } catch (error) {
-    res.status(500).send("حدث خطأ: " + error.message);
+    res.status(500).send("خطأ: " + error.message);
   }
 });
 
-// بدء السيرفر على المنفذ 0.0.0.0 لضمان وصول Railway له
+// تشغيل السيرفر على 0.0.0.0 وهو أمر ضروري لـ Railway
 app.listen(port, '0.0.0.0', () => {
   console.log('Server is running on port ' + port);
 });
