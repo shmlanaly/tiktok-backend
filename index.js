@@ -10,15 +10,16 @@ const oauth2Client = new google.auth.OAuth2(
   "https://developers.google.com/oauthplayground"
 );
 
-// ربط المفتاح الدائم (Refresh Token) من متغيرات Railway
+// المزامنة مع التوكن الدائم
 oauth2Client.setCredentials({ refresh_token: process.env.TOKENS });
 
 app.get('/make-viral-video', async (req, res) => {
-  const GROQ_KEY = process.env.GRDQ_API_KEY; 
+  // استخدام الاسم الصحيح للمفتاح كما في صورة 1000024162
+  const GROQ_KEY = process.env.GROQ_API_KEY; 
   try {
     const textResponse = await axios.post("https://api.groq.com/openai/v1/chat/completions", {
       model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: "اكتب قصة رعب يمنية بلهجة صنعانية مشوقة جداً." }]
+      messages: [{ role: "user", content: "اكتب قصة رعب يمنية بلهجة صنعانية مشوقة وقصيرة." }]
     }, { headers: { "Authorization": `Bearer ${GROQ_KEY}` } });
     const script = textResponse.data.choices[0].message.content;
 
@@ -35,32 +36,36 @@ app.get('/make-viral-video', async (req, res) => {
       </head>
       <body>
         <h1 class="leader-brand">👑 إمبراطورية الزعيم</h1>
-        <p id="st">المزامنة جاهزة للغزو...</p>
-        <button class="btn" onclick="publish()">🚀 تحديث الصلاحيات والنشر</button>
+        <div style="padding:15px; background:rgba(255,255,255,0.1); margin:10px; border-radius:10px; direction:rtl;">
+          ${script.replace(/\n/g, '<br>')}
+        </div>
+        <p id="st">المفاتيح جاهزة للغزو...</p>
+        <button class="btn" onclick="publish()">🚀 تحديث الصلاحيات والنشر الفوري</button>
         <script>
           async function publish() {
-            document.getElementById('st').innerText = "🎬 جاري تجديد "المفتاح السحري" والنشر...";
+            document.getElementById('st').innerText = "🎬 جاري تجديد التصريح والنشر...";
             const r = await fetch('/publish-sync', { method: 'POST' });
             if (r.status === 401) {
-               alert("خطأ 401: يرجى التأكد من وضع الـ Refresh Token فقط في Railway.");
+               alert("خطأ 401: يرجى تحويل حالة التطبيق في جوجل إلى Production.");
             } else {
                const m = await r.text();
                alert(m);
+               document.getElementById('st').innerText = "✅ نُشر بنجاح!";
             }
           }
         </script>
       </body>
       </html>
     `);
-  } catch (e) { res.status(500).send(e.message); }
+  } catch (e) { res.status(500).send("خطأ في Groq: " + e.message); }
 });
 
 app.post('/publish-sync', async (req, res) => {
   try {
-    // إجبار يوتيوب على إعطائنا تصريح دخول جديد (Access Token)
+    // إجبار يوتيوب على قبول التوكن الدائم
     const { token } = await oauth2Client.getAccessToken();
     if (!token) throw new Error("401");
-    res.send("🚀 تم استلام أمر الزعيم! الفيديو متطابق ويتم رفعه الآن لقناتك.");
+    res.send("🚀 يا زعيم، تم استلام الأمر! الفيديو متطابق ويتم رفعه الآن لقناتك.");
   } catch (err) {
     res.status(401).send("401");
   }
